@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hangul Memory Trainer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background: #1e1e1e;
+        color: white;
+        text-align: center;
+        padding: 50px;
+      }
+      #syllable {
+        font-size: 120px;
+        color: gold;
+        margin-bottom: 20px;
+      }
+      #input {
+        font-size: 32px;
+        padding: 10px;
+        width: 240px;
+        border: none;
+        border-radius: 6px;
+        text-align: center;
+      }
+      #status {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+      #hint {
+        font-size: 24px;
+        color: #aaa;
+        margin-top: 10px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+      }
+      #hint.visible {
+        opacity: 1;
+      }
+      #controls {
+        margin-top: 20px;
+      }
+      select, button {
+        font-size: 16px;
+        padding: 6px 12px;
+        margin: 10px;
+        border-radius: 5px;
+        border: none;
+        background-color: #444;
+        color: white;
+      }
+      #progress-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧠 Hangul Trainer</h1>
+
+    <div id="syllable">가</div>
+
+    <input id="input" type="text" autocomplete="off" placeholder="Type romanization..." />
+    <div id="hint"></div>
+
+    <div id="status">
+      <p>Score: <span id="score">0</span></p>
+      <p>Unlocked: <span id="unlocked">0</span> / <span id="total">0</span></p>
+    </div>
+
+    <div id="controls">
+    <label for="focus-mode">Focus on:</label>
+      <select id="focus-mode" onchange="onFocusChange()">
+        <option value="all">All</option>
+        <option value="consonant">Consonant Focus</option>
+        <option value="vowel">Vowel Focus</option>
+      </select>
+      <button onclick="resetProgress()">Reset Progress</button>
+    </div>
+
+    <div id="progress-container" style="margin-top: 40px">
+      <h3>📈 Progress per syllable</h3>
+      <div id="progress-grid"></div>
+    </div>
+
+    <audio id="hint-sound" src="mixkit-long-pop-2358.wav" preload="auto"></audio>
+    <audio id="correct-sound" src="mixkit-correct-answer-tone-2870.wav" preload="auto"></audio>
+    <audio id="wrong-sound" src="mixkit-software-interface-back-2575.wav" preload="auto"></audio>
+
+    <script>
+      let focusMode = "all";
+
+      const MAX_SCORE = 5;
+      const UNLOCK_THRESHOLD = 3;
+
+      const hangulMap = {
+        // Basic Consonants
+        ㄱ: "g",
+        ㄴ: "n",
+        ㄷ: "d",
+        ㄹ: "r",
+        ㅁ: "m",
+        ㅂ: "b",
+        ㅅ: "s",
+        ㅇ: "ng",  // silent at beginning, ng at end
+        ㅈ: "j",
+        ㅊ: "ch",
+        ㅋ: "k",
+        ㅌ: "t",
+        ㅍ: "p",
+        ㅎ: "h",
+      
+        // Complex Consonants
+        ㄲ: "kk",
+        ㄸ: "tt",
+        ㅃ: "pp",
+        ㅆ: "ss",
+        ㅉ: "jj",
+      
+        // Basic Vowels
+        ㅏ: "a",
+        ㅑ: "ya",
+        ㅓ: "eo",
+        ㅕ: "yeo",
+        ㅗ: "o",
+        ㅛ: "yo",
+        ㅜ: "u",
+        ㅠ: "yu",
+        ㅡ: "eu",
+        ㅣ: "i",
+      
+        // Complex Vowels
+        ㅐ: "ae",
+        ㅒ: "yae",
+        ㅔ: "e",
+        ㅖ: "ye",
+        ㅘ: "wa",
+        ㅙ: "wae",
+        ㅚ: "oe",
+        ㅝ: "wo",
+        ㅞ: "we",
+        ㅟ: "wi",
+        ㅢ: "ui"
+      };
+      
+
+      const allSyllables = Object.keys(hangulMap);
+
+      // Declare variables
+      let memory = loadMemory();
+      let unlocked = getUnlocked();
+      let current = null;
+      let score = 0;
+      let hintTimeout;
+      let hintShown = false;
+
+      const syllableEl = document.getElementById("syllable");
+      const inputEl = document.getElementById("input");
+      const scoreEl = document.getElementById("score");
+      const unlockedEl = document.getElementById("unlocked");
+      const totalEl = document.getElementById("total");
+      const hintEl = document.getElementById("hint");
+
+      totalEl.innerText = allSyllables.length;
+
+      function loadMemory() {
+        let saved = localStorage.getItem("hangul_memory");
+        if (saved) return JSON.parse(saved);
+        let m = {};
+        allSyllables.forEach((k) => (m[k] = 0));
+        return m;
+      }
+
+      function saveMemory() {
+        localStorage.setItem("hangul_memory", JSON.stringify(memory));
+      }
+
+      function getUnlocked() {
+        const initial = 3;
+        const unlockedList = allSyllables.filter(
+          (k) => memory[k] >= UNLOCK_THRESHOLD
+        );
+        const baseUnlocked = Math.max(initial, unlockedList.length + initial);
+        return allSyllables.slice(0, baseUnlocked);
+      }
+
+      function getNextSyllable() {
+        let candidates = unlocked.filter((s) => {
+          const known = memory[s] || 0;
+          if (known >= MAX_SCORE) return false;
+      
+          if (focusMode === "vowel") {
+            const { vowel } = decomposeHangul(s);
+            return vowel === "ㅏ" || vowel === "ㅗ" || vowel === "ㅜ"; // customize this
+          } else if (focusMode === "consonant") {
+            const { initial } = decomposeHangul(s);
+            return initial === "ㄱ" || initial === "ㅁ" || initial === "ㅂ"; // customize this
+          }
+      
+          return true;
+        });
+      
+        if (candidates.length === 0) candidates = unlocked;
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      }
+      
+
+      function onFocusChange() {
+        focusMode = document.getElementById("focus-mode").value;
+        current = getNextSyllable();
+        updateUI();
+      }
+
+      function decomposeHangul(syllable) {
+        const code = syllable.charCodeAt(0) - 0xAC00;
+        const initial = Math.floor(code / 588); // Choseong
+        const medial = Math.floor((code % 588) / 28); // Jungseong
+        const finals = code % 28; // Jongseong
+      
+        const initials = [
+          "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ",
+          "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ",
+          "ㅌ", "ㅍ", "ㅎ",
+        ];
+        const vowels = [
+          "ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ",
+          "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ",
+          "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ",
+        ];
+      
+        return {
+          initial: initials[initial],
+          vowel: vowels[medial],
+          final: finals,
+        };
+      }
+      
+      function isVowel(syllable) {
+        const { vowel } = decomposeHangul(syllable);
+        return !!vowel;
+      }
+      
+      function isConsonant(syllable) {
+        const { initial } = decomposeHangul(syllable);
+        return !!initial;
+      }
+      
+
+      function showHint() {
+        hintEl.innerText = `Hint: ${hangulMap[current]}`;
+        hintEl.classList.add("visible");
+
+        if (!hintShown) {
+          memory[current] = Math.max(0, memory[current] - 1);
+          saveMemory();
+          hintShown = true;
+
+          document.getElementById("hint-sound").play();
+        }
+      }
+
+      function updateUI() {
+        syllableEl.innerText = current;
+        scoreEl.innerText = score;
+        unlockedEl.innerText = unlocked.length;
+        hintEl.innerText = "";
+        hintEl.classList.remove("visible");
+        clearTimeout(hintTimeout);
+        hintShown = false;
+        hintTimeout = setTimeout(showHint, 4000);
+        renderProgress(); // <- here
+      }
+
+      function renderProgress() {
+        const gridEl = document.getElementById("progress-grid");
+        gridEl.innerHTML = ""; // clear previous
+
+        allSyllables.forEach((syl) => {
+          const score = memory[syl] || 0;
+          const percent = Math.min((score / MAX_SCORE) * 100, 100);
+
+          const tile = document.createElement("div");
+          tile.style.border = "1px solid #444";
+          tile.style.borderRadius = "8px";
+          tile.style.overflow = "hidden";
+          tile.style.background = "#222";
+          tile.style.textAlign = "center";
+          tile.style.fontSize = "14px";
+
+          tile.innerHTML = `
+            <div style="height: 6px; background: #333;">
+              <div style="width:${percent}%; height: 100%; background: ${
+            percent >= 100 ? "#4caf50" : "#2196f3"
+          };"></div>
+            </div>
+            <div style="padding: 10px;">
+              <div style="font-size: 20px;">${syl}</div>
+              <div style="opacity: 0.7;">${hangulMap[syl]}</div>
+            </div>
+          `;
+
+          gridEl.appendChild(tile);
+        });
+      }
+
+      function resetProgress() {
+        if (confirm("Are you sure you want to reset all progress?")) {
+          localStorage.removeItem("hangul_memory");
+          memory = loadMemory();
+          unlocked = getUnlocked();
+          score = 0;
+          current = getNextSyllable();
+          updateUI();
+          renderProgress();
+        }
+      }
+
+      inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const roman = inputEl.value.trim().toLowerCase();
+          if (roman === hangulMap[current]) {
+            score++;
+            memory[current] = Math.min(MAX_SCORE, memory[current] + 1);
+            document.getElementById("correct-sound").currentTime = 0;
+            document.getElementById("correct-sound").play();
+          } else {
+            memory[current] = Math.max(0, memory[current] - 1);
+            document.getElementById("wrong-sound").currentTime = 0;
+            document.getElementById("wrong-sound").play();
+          }
+          saveMemory();
+          unlocked = getUnlocked();
+          current = getNextSyllable();
+          inputEl.value = "";
+          updateUI();
+          renderProgress(); // <- here
+        }
+      });
+
+      // ✅ Initialize the first syllable after all functions are ready
+      current = getNextSyllable();
+      updateUI();
+    </script>
+
+    <button
+      onclick="resetProgress()"
+      style="
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 6px;
+        background-color: #ff4444;
+        color: white;
+        border: none;
+        cursor: pointer;
+      "
+    >
+      🔄 Reset Progress
+    </button>
+  </body>
+</html>
