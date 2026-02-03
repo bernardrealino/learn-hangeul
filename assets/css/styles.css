@@ -133,6 +133,57 @@ h1 {
   }
 }
 
+.preview-queue {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 30px 0 10px;
+  padding: 10px;
+  background: rgba(128, 0, 0, 0.02);
+  border-radius: 20px;
+}
+
+.preview-tile {
+  width: 50px;
+  height: 50px;
+  background: var(--tile-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Noto Serif KR", serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: 0 4px 6px -1px var(--shadow);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.preview-tile.recent {
+  opacity: 0.4;
+  transform: scale(0.85);
+  background: rgba(128, 0, 0, 0.05);
+}
+
+.preview-tile.upcoming {
+  opacity: 0.7;
+  transform: scale(0.9);
+}
+
+.preview-tile.current-preview {
+  border-color: var(--primary);
+  box-shadow: 0 0 15px var(--shadow);
+  transform: scale(1.1);
+  background: var(--bg-gradient);
+  z-index: 2;
+}
+
+.preview-tile:empty {
+  visibility: hidden;
+}
+
 .input-wrapper {
   position: relative;
   display: inline-block;
@@ -204,6 +255,53 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-dim);
+}
+
+.mini-tile {
+  width: 50px;
+  height: 50px;
+  background: var(--tile-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  margin: 0 auto 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 10px var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.mini-tile-syllable {
+  font-family: "Noto Serif KR", serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.mini-tile-roman {
+  font-size: 9px;
+  color: var(--text-dim);
+  line-height: 1;
+}
+
+.mini-tile-progress-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.mini-tile-progress-fill {
+  height: 100%;
+  background: var(--secondary);
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 .xp-container {

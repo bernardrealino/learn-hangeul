@@ -27,6 +27,9 @@ let bestStreak = memory.best_streak || 0;
 let hintTimeout;
 let hintShown = false;
 
+let history = [];
+let upcomingQueue = [];
+
 // DOM Elements
 const syllableEl = document.getElementById("syllable");
 const inputEl = document.getElementById("input");
@@ -40,6 +43,10 @@ const streakEl = document.getElementById("current-streak");
 const streakBadge = document.getElementById("streak-badge");
 const streakCountEl = document.getElementById("streak-count");
 const dailyStreakEl = document.getElementById("daily-streak");
+const miniTileEl = document.getElementById("mini-tile");
+const miniTileSylEl = document.getElementById("mini-tile-syllable");
+const miniTileRomanEl = document.getElementById("mini-tile-roman");
+const miniTileFillEl = document.getElementById("mini-tile-progress-fill");
 
 // Initialize total count
 if (totalEl) totalEl.innerText = allSyllables.length;
@@ -126,6 +133,51 @@ function getNextSyllable() {
     });
     if (candidates.length === 0) candidates = unlocked;
     return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function getNextUpcoming() {
+    if (upcomingQueue.length === 0) {
+        // First initialization
+        while (upcomingQueue.length < 3) {
+            upcomingQueue.push(generateNextCandidate());
+        }
+    } else {
+        upcomingQueue.push(generateNextCandidate());
+    }
+    return upcomingQueue.shift();
+}
+
+function generateNextCandidate() {
+    let candidates = unlocked.filter((s) => (memory.jamo[s] || 0) < MAX_SCORE);
+    if (candidates.length === 0) candidates = unlocked;
+
+    // Avoid immediate repetition if possible
+    let lastInQueue = upcomingQueue[upcomingQueue.length - 1];
+    let filtered = candidates.filter(s => s !== lastInQueue && s !== current);
+    let finalSource = filtered.length > 0 ? filtered : candidates;
+
+    return finalSource[Math.floor(Math.random() * finalSource.length)];
+}
+
+function updatePreviewQueue() {
+    const prev2 = document.getElementById("prev-2");
+    const prev1 = document.getElementById("prev-1");
+    const curr = document.getElementById("curr-preview");
+    const next1 = document.getElementById("next-1");
+    const next2 = document.getElementById("next-2");
+
+    if (!curr) return; // Not on home page
+
+    // Update Recent
+    if (prev2) prev2.innerText = history[history.length - 2] || "";
+    if (prev1) prev1.innerText = history[history.length - 1] || "";
+
+    // Update Current
+    if (curr) curr.innerText = current || "";
+
+    // Update Upcoming
+    if (next1) next1.innerText = upcomingQueue[0] || "";
+    if (next2) next2.innerText = upcomingQueue[1] || "";
 }
 
 /**
@@ -231,6 +283,32 @@ function updateUI() {
         void syllableEl.offsetWidth;
         syllableEl.classList.add("syllable-pulse");
     }
+    updateMiniProgress();
+}
+
+function updateMiniProgress() {
+    if (!miniTileEl || !current) return;
+
+    const sylScore = memory.jamo[current] || 0;
+    const percent = Math.min((sylScore / MAX_SCORE) * 100, 100);
+
+    if (miniTileSylEl) miniTileSylEl.innerText = current;
+    if (miniTileRomanEl) miniTileRomanEl.innerText = hangulMap[current];
+    if (miniTileFillEl) {
+        miniTileFillEl.style.width = `${percent}%`;
+        // Change color if mastered
+        if (sylScore >= MAX_SCORE) {
+            miniTileFillEl.style.background = 'var(--primary)';
+        } else {
+            miniTileFillEl.style.background = 'var(--secondary)';
+        }
+    }
+
+    // Animate mini tile on change
+    miniTileEl.style.transform = 'scale(1.1)';
+    setTimeout(() => {
+        miniTileEl.style.transform = 'scale(1)';
+    }, 200);
 }
 
 function updateGamificationUI() {
@@ -348,16 +426,29 @@ if (inputEl) {
             }
             saveMemory();
             unlocked = getUnlocked();
-            current = getNextSyllable();
+
+            // Move current to history
+            if (current) {
+                history.push(current);
+                if (history.length > 5) history.shift();
+            }
+
+            current = getNextUpcoming();
             inputEl.value = "";
             updateUI();
+            updatePreviewQueue();
         }
     });
 }
 
 // Start the game
-current = getNextSyllable();
+// Initialize queue
+while (upcomingQueue.length < 2) {
+    upcomingQueue.push(generateNextCandidate());
+}
+current = generateNextCandidate();
 checkDailyStreak();
 updateUI();
 updateStreakUI();
 updateGamificationUI();
+updatePreviewQueue();
