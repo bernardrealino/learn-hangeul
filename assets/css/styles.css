@@ -73,18 +73,60 @@ h1 {
   font-size: 2.5rem;
 }
 
-#syllable {
+.carousel-viewport {
+  width: 100%;
+  max-width: 600px;
+  margin: 40px auto 20px;
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 25%, black 75%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 25%, black 75%, transparent);
+}
+
+.carousel-track {
+  display: flex;
+  align-items: center;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* The track will be shifted by the JS */
+}
+
+.carousel-tile {
+  flex: 0 0 120px;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-family: "Noto Serif KR", serif;
-  font-size: 160px;
+  font-size: 60px;
   font-weight: 700;
-  line-height: 1.2;
-  margin: 20px 0;
+  color: var(--text-dim);
+  opacity: 0.3;
+  transition: all 0.5s ease;
+  user-select: none;
+}
+
+.carousel-tile.prev-1,
+.carousel-tile.next-1 {
+  opacity: 0.6;
+  font-size: 90px;
+  transform: scale(0.9);
+}
+
+.carousel-tile.active {
+  opacity: 1;
+  font-size: 160px;
+  color: var(--text);
   background: linear-gradient(45deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 10px var(--shadow));
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: scale(1.1);
+  flex: 0 0 180px;
+}
+
+.carousel-tile:empty {
+  visibility: hidden;
 }
 
 .syllable-pulse {
@@ -131,53 +173,6 @@ h1 {
   60% {
     transform: translate3d(4px, 0, 0);
   }
-}
-
-.preview-queue {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin: 30px 0 10px;
-  padding: 10px;
-  background: rgba(128, 0, 0, 0.02);
-  border-radius: 20px;
-}
-
-.preview-tile {
-  width: 50px;
-  height: 50px;
-  background: var(--tile-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: "Noto Serif KR", serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-  box-shadow: 0 4px 6px -1px var(--shadow);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.preview-tile.recent {
-  opacity: 0.4;
-  transform: scale(0.85);
-  background: rgba(128, 0, 0, 0.05);
-}
-
-.preview-tile.upcoming {
-  opacity: 0.7;
-  transform: scale(0.9);
-}
-
-.preview-tile.current-preview {
-  border-color: var(--primary);
-  box-shadow: 0 0 15px var(--shadow);
-  transform: scale(1.1);
-  background: var(--bg-gradient);
-  z-index: 2;
 }
 
 .preview-tile:empty {

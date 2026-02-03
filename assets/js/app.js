@@ -43,10 +43,12 @@ const streakEl = document.getElementById("current-streak");
 const streakBadge = document.getElementById("streak-badge");
 const streakCountEl = document.getElementById("streak-count");
 const dailyStreakEl = document.getElementById("daily-streak");
-const miniTileEl = document.getElementById("mini-tile");
-const miniTileSylEl = document.getElementById("mini-tile-syllable");
-const miniTileRomanEl = document.getElementById("mini-tile-roman");
-const miniTileFillEl = document.getElementById("mini-tile-progress-fill");
+
+const carouselTrack = document.getElementById("carousel-track");
+const tilePrev2 = document.getElementById("tile-prev-2");
+const tilePrev1 = document.getElementById("tile-prev-1");
+const tileNext1 = document.getElementById("tile-next-1");
+const tileNext2 = document.getElementById("tile-next-2");
 
 // Initialize total count
 if (totalEl) totalEl.innerText = allSyllables.length;
@@ -159,25 +161,32 @@ function generateNextCandidate() {
     return finalSource[Math.floor(Math.random() * finalSource.length)];
 }
 
-function updatePreviewQueue() {
-    const prev2 = document.getElementById("prev-2");
-    const prev1 = document.getElementById("prev-1");
-    const curr = document.getElementById("curr-preview");
-    const next1 = document.getElementById("next-1");
-    const next2 = document.getElementById("next-2");
+function updatePreviewQueue(isCorrect = false) {
+    if (!carouselTrack) return;
 
-    if (!curr) return; // Not on home page
+    if (isCorrect) {
+        // Slide animation: Shift the track to the left
+        // Flex basis + gap = shift amount. 
+        carouselTrack.style.transition = "transform 0.5s cubic-bezier(0.45, 0.05, 0.55, 0.95)";
+        carouselTrack.style.transform = "translateX(-150px)";
 
-    // Update Recent
-    if (prev2) prev2.innerText = history[history.length - 2] || "";
-    if (prev1) prev1.innerText = history[history.length - 1] || "";
+        setTimeout(() => {
+            // Reset track instantly and update content
+            carouselTrack.style.transition = "none";
+            carouselTrack.style.transform = "translateX(0)";
+            refreshTiles();
+        }, 500);
+    } else {
+        refreshTiles();
+    }
+}
 
-    // Update Current
-    if (curr) curr.innerText = current || "";
-
-    // Update Upcoming
-    if (next1) next1.innerText = upcomingQueue[0] || "";
-    if (next2) next2.innerText = upcomingQueue[1] || "";
+function refreshTiles() {
+    if (tilePrev2) tilePrev2.innerText = history[history.length - 2] || "";
+    if (tilePrev1) tilePrev1.innerText = history[history.length - 1] || "";
+    if (syllableEl) syllableEl.innerText = current || "";
+    if (tileNext1) tileNext1.innerText = upcomingQueue[0] || "";
+    if (tileNext2) tileNext2.innerText = upcomingQueue[1] || "";
 }
 
 /**
@@ -279,36 +288,12 @@ function updateUI() {
     updateGamificationUI();
 
     if (syllableEl) {
-        syllableEl.classList.remove("syllable-pulse");
-        void syllableEl.offsetWidth;
-        syllableEl.classList.add("syllable-pulse");
+        // No pulse needed here as we have the sliding animation
     }
-    updateMiniProgress();
 }
 
 function updateMiniProgress() {
-    if (!miniTileEl || !current) return;
-
-    const sylScore = memory.jamo[current] || 0;
-    const percent = Math.min((sylScore / MAX_SCORE) * 100, 100);
-
-    if (miniTileSylEl) miniTileSylEl.innerText = current;
-    if (miniTileRomanEl) miniTileRomanEl.innerText = hangulMap[current];
-    if (miniTileFillEl) {
-        miniTileFillEl.style.width = `${percent}%`;
-        // Change color if mastered
-        if (sylScore >= MAX_SCORE) {
-            miniTileFillEl.style.background = 'var(--primary)';
-        } else {
-            miniTileFillEl.style.background = 'var(--secondary)';
-        }
-    }
-
-    // Animate mini tile on change
-    miniTileEl.style.transform = 'scale(1.1)';
-    setTimeout(() => {
-        miniTileEl.style.transform = 'scale(1)';
-    }, 200);
+    // Mini progress is now integrated or removed as per user preference
 }
 
 function updateGamificationUI() {
@@ -436,7 +421,7 @@ if (inputEl) {
             current = getNextUpcoming();
             inputEl.value = "";
             updateUI();
-            updatePreviewQueue();
+            updatePreviewQueue(true);
         }
     });
 }

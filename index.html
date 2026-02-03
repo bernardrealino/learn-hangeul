@@ -75,15 +75,15 @@
       🔥 <span id="streak-count">0</span> Streak!
     </div>
 
-    <div class="preview-queue" id="preview-queue">
-      <div class="preview-tile recent" id="prev-2"></div>
-      <div class="preview-tile recent" id="prev-1"></div>
-      <div class="preview-tile current-preview" id="curr-preview"></div>
-      <div class="preview-tile upcoming" id="next-1"></div>
-      <div class="preview-tile upcoming" id="next-2"></div>
+    <div class="carousel-viewport">
+      <div class="carousel-track" id="carousel-track">
+        <div class="carousel-tile prev-2" id="tile-prev-2"></div>
+        <div class="carousel-tile prev-1" id="tile-prev-1"></div>
+        <div class="carousel-tile active" id="syllable"></div>
+        <div class="carousel-tile next-1" id="tile-next-1"></div>
+        <div class="carousel-tile next-2" id="tile-next-2"></div>
+      </div>
     </div>
-
-    <div id="syllable">가</div>
 
     <div class="input-wrapper">
       <input id="input" type="text" autocomplete="off" placeholder="Type romanization..." autofocus />
