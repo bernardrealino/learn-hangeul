@@ -467,3 +467,62 @@ button:hover {
 .btn-icon {
   font-size: 18px;
 }
+
+/* Simplified Progress Section */
+.progress-summary {
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(128, 0, 0, 0.03);
+  border-radius: 16px;
+  text-align: left;
+}
+
+.mastery-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.mastery-info h3 {
+  font-size: 16px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#mastery-percent {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.mastery-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.mastery-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.view-details-link {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--secondary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.view-details-link:hover {
+  color: var(--primary);
+  transform: translateX(5px);
+}

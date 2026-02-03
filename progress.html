@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Syllable Mastery - Hangul Memory Trainer</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&family=Noto+Serif+KR:wght@200..900&display=swap"
+        rel="stylesheet">
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <style>
+        .back-nav {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .back-nav {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 20px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="back-nav">
+            <a href="index.html" class="back-btn">← Back to Dashboard</a>
+        </div>
+
+        <h1>📈 Syllable Mastery</h1>
+
+        <div id="progress-container">
+            <div id="progress-grid"></div>
+        </div>
+
+        <div class="controls" style="margin-top: 40px;">
+            <button onclick="resetProgress()" class="btn-danger">🔄 Reset All Data</button>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="credits">
+            Made with 🧠 by <a href="https://bernardrealino.com" target="_blank">Bernard Realino</a>
+        </div>
+    </footer>
+
+    <!-- Core Logic -->
+    <script src="assets/js/app.js"></script>
+</body>
+
+</html>

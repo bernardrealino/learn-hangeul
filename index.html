@@ -87,9 +87,15 @@
       <button onclick="resetProgress()" class="btn-danger">🔄 Reset Progress</button>
     </div>
 
-    <div id="progress-container">
-      <h3>📈 Your Progress</h3>
-      <div id="progress-grid"></div>
+    <div id="progress-container-simple" class="progress-summary">
+      <div class="mastery-info">
+        <h3>Mastery Progress</h3>
+        <span id="mastery-percent">0% Mastery</span>
+      </div>
+      <div class="mastery-bar">
+        <div id="mastery-bar-fill" class="mastery-bar-fill"></div>
+      </div>
+      <a href="progress.html" class="view-details-link">View Detailed Progress →</a>
     </div>
   </div>
 

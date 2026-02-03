@@ -181,8 +181,11 @@ function notify(type, text) {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     toast.innerText = text;
-    document.querySelector(".input-wrapper").appendChild(toast);
-    setTimeout(() => toast.remove(), 1000);
+    const wrapper = document.querySelector(".input-wrapper");
+    if (wrapper) {
+        wrapper.appendChild(toast);
+        setTimeout(() => toast.remove(), 1000);
+    }
 }
 
 function celebrateMastery() {
@@ -210,20 +213,24 @@ function celebrateLevelUp(lvl) {
 }
 
 function updateUI() {
-    syllableEl.innerText = current;
-    scoreEl.innerText = score;
-    unlockedEl.innerText = unlocked.length;
-    hintEl.innerText = "";
-    hintEl.classList.remove("visible");
+    if (syllableEl) syllableEl.innerText = current;
+    if (scoreEl) scoreEl.innerText = score;
+    if (unlockedEl) unlockedEl.innerText = unlocked.length;
+    if (hintEl) {
+        hintEl.innerText = "";
+        hintEl.classList.remove("visible");
+    }
     clearTimeout(hintTimeout);
     hintShown = false;
-    hintTimeout = setTimeout(showHint, 4000);
+    if (syllableEl) hintTimeout = setTimeout(showHint, 4000);
     renderProgress();
     updateGamificationUI();
 
-    syllableEl.classList.remove("syllable-pulse");
-    void syllableEl.offsetWidth;
-    syllableEl.classList.add("syllable-pulse");
+    if (syllableEl) {
+        syllableEl.classList.remove("syllable-pulse");
+        void syllableEl.offsetWidth;
+        syllableEl.classList.add("syllable-pulse");
+    }
 }
 
 function updateGamificationUI() {
@@ -232,9 +239,9 @@ function updateGamificationUI() {
     const nextLevelXP = Math.pow(level, 2) * 100;
     const progress = ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
 
-    levelEl.innerText = level;
-    xpBarEl.style.width = `${progress}%`;
-    streakEl.innerText = streak;
+    if (levelEl) levelEl.innerText = level;
+    if (xpBarEl) xpBarEl.style.width = `${progress}%`;
+    if (streakEl) streakEl.innerText = streak;
     if (dailyStreakEl) dailyStreakEl.innerText = memory.daily_streak || 0;
 
     if (level > (memory.level || 1)) {
@@ -242,15 +249,32 @@ function updateGamificationUI() {
         memory.level = level;
         saveMemory();
     }
+
+    // Simplified Progress for Home Page
+    updateMasterySummary();
+}
+
+function updateMasterySummary() {
+    const masteryEl = document.getElementById("mastery-percent");
+    const masteryBarEl = document.getElementById("mastery-bar-fill");
+    if (!masteryEl && !masteryBarEl) return;
+
+    const masteredCount = allSyllables.filter(s => (memory.jamo[s] || 0) >= MAX_SCORE).length;
+    const percent = Math.floor((masteredCount / allSyllables.length) * 100);
+
+    if (masteryEl) masteryEl.innerText = `${percent}% Mastery`;
+    if (masteryBarEl) masteryBarEl.style.width = `${percent}%`;
 }
 
 function updateStreakUI() {
-    streakEl.innerText = streak;
-    if (streak >= 3) {
-        streakBadge.classList.add("visible");
-        streakCountEl.innerText = streak;
-    } else {
-        streakBadge.classList.remove("visible");
+    if (streakEl) streakEl.innerText = streak;
+    if (streakBadge) {
+        if (streak >= 3) {
+            streakBadge.classList.add("visible");
+            if (streakCountEl) streakCountEl.innerText = streak;
+        } else {
+            streakBadge.classList.remove("visible");
+        }
     }
 }
 
@@ -276,56 +300,60 @@ function renderProgress() {
 /**
  * Input Handling
  */
-inputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        const roman = inputEl.value.trim().toLowerCase();
-        if (roman === hangulMap[current]) {
-            const prevScore = memory.jamo[current] || 0;
-            score++;
-            streak++;
-            bestStreak = Math.max(bestStreak, streak);
-            xp += 10 + (Math.floor(streak / 5) * 5);
+if (inputEl) {
+    inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const roman = inputEl.value.trim().toLowerCase();
+            if (roman === hangulMap[current]) {
+                const prevScore = memory.jamo[current] || 0;
+                score++;
+                streak++;
+                bestStreak = Math.max(bestStreak, streak);
+                xp += 10 + (Math.floor(streak / 5) * 5);
 
-            memory.jamo[current] = Math.min(MAX_SCORE, (memory.jamo[current] || 0) + 1);
-            notify("correct", "Correct!");
-            playSound("correct-sound");
-            if (prevScore < MAX_SCORE && memory.jamo[current] === MAX_SCORE) {
-                celebrateMastery();
-            }
-
-            // Daily streak update
-            const today = new Date().toDateString();
-            if (memory.last_date !== today) {
-                if (memory.last_date) {
-                    const msPerDay = 24 * 60 * 60 * 1000;
-                    const dayDiff = Math.floor((new Date(today) - new Date(memory.last_date)) / msPerDay);
-                    if (dayDiff === 1) memory.daily_streak++;
-                    else memory.daily_streak = 1;
-                } else {
-                    memory.daily_streak = 1;
+                memory.jamo[current] = Math.min(MAX_SCORE, (memory.jamo[current] || 0) + 1);
+                notify("correct", "Correct!");
+                playSound("correct-sound");
+                if (prevScore < MAX_SCORE && memory.jamo[current] === MAX_SCORE) {
+                    celebrateMastery();
                 }
-                memory.last_date = today;
-            }
 
-            updateStreakUI();
-        } else {
-            memory.jamo[current] = Math.max(0, (memory.jamo[current] || 0) - 1);
-            notify("wrong", "Try again");
-            playSound("wrong-sound");
-            streak = 0;
-            updateStreakUI();
-            const appEl = document.getElementById("app");
-            appEl.classList.remove("shake");
-            void appEl.offsetWidth;
-            appEl.classList.add("shake");
+                // Daily streak update
+                const today = new Date().toDateString();
+                if (memory.last_date !== today) {
+                    if (memory.last_date) {
+                        const msPerDay = 24 * 60 * 60 * 1000;
+                        const dayDiff = Math.floor((new Date(today) - new Date(memory.last_date)) / msPerDay);
+                        if (dayDiff === 1) memory.daily_streak++;
+                        else memory.daily_streak = 1;
+                    } else {
+                        memory.daily_streak = 1;
+                    }
+                    memory.last_date = today;
+                }
+
+                updateStreakUI();
+            } else {
+                memory.jamo[current] = Math.max(0, (memory.jamo[current] || 0) - 1);
+                notify("wrong", "Try again");
+                playSound("wrong-sound");
+                streak = 0;
+                updateStreakUI();
+                const appEl = document.getElementById("app");
+                if (appEl) {
+                    appEl.classList.remove("shake");
+                    void appEl.offsetWidth;
+                    appEl.classList.add("shake");
+                }
+            }
+            saveMemory();
+            unlocked = getUnlocked();
+            current = getNextSyllable();
+            inputEl.value = "";
+            updateUI();
         }
-        saveMemory();
-        unlocked = getUnlocked();
-        current = getNextSyllable();
-        inputEl.value = "";
-        updateUI();
-    }
-});
+    });
+}
 
 // Start the game
 current = getNextSyllable();
