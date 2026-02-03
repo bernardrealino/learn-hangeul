@@ -1,365 +1,787 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hangul Memory Trainer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet" />
-    <style>
-      body {
-        font-family: "Noto Sans KR", sans-serif;
-        background: #1e1e1e;
-        color: white;
-        text-align: center;
-        padding: 50px;
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Hangul Memory Trainer</title>
+  <!-- Local Fonts -->
+  <style>
+    @font-face {
+      font-family: 'Noto Sans KR';
+      src: url('NotoSansKR-VariableFont_wght.ttf') format('truetype');
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Noto Serif KR';
+      src: url('NotoSerifKR-VariableFont_wght.ttf') format('truetype');
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    :root {
+      --primary: #800000;
+      --secondary: #a52a2a;
+      --accent: #5e1914;
+      --bg-gradient: linear-gradient(135deg, #ffffff 0%, #fdf5f5 50%, #f8eeee 100%);
+      --glass-bg: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(128, 0, 0, 0.1);
+      --text: #2c0000;
+      --text-dim: rgba(44, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 25px 50px -12px rgba(128, 0, 0, 0.1);
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 30px;
+      background: linear-gradient(to right, var(--primary), #a52a2a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.5rem;
+    }
+
+    #syllable {
+      font-family: "Noto Serif KR", serif;
+      font-size: 160px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin: 20px 0;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(128, 0, 0, 0.1));
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .syllable-pulse {
+      animation: pulse 0.5s ease-out;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
       }
-      #syllable {
-        font-size: 120px;
-        color: gold;
-        margin-bottom: 20px;
+
+      50% {
+        transform: scale(1.1);
       }
-      #input {
-        font-size: 32px;
-        padding: 10px;
-        width: 240px;
-        border: none;
-        border-radius: 6px;
-        text-align: center;
+
+      100% {
+        transform: scale(1);
       }
-      #status {
-        margin-top: 20px;
-        font-size: 18px;
+    }
+
+    .shake {
+      animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+    }
+
+    @keyframes shake {
+
+      10%,
+      90% {
+        transform: translate3d(-1px, 0, 0);
       }
-      #hint {
-        font-size: 24px;
-        color: #aaa;
-        margin-top: 10px;
-        opacity: 0;
-        transition: opacity 0.5s ease-in;
+
+      20%,
+      80% {
+        transform: translate3d(2px, 0, 0);
       }
-      #hint.visible {
+
+      30%,
+      50%,
+      70% {
+        transform: translate3d(-4px, 0, 0);
+      }
+
+      40%,
+      60% {
+        transform: translate3d(4px, 0, 0);
+      }
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 30px;
+    }
+
+    #input {
+      font-size: 28px;
+      padding: 16px 24px;
+      width: 300px;
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      background: rgba(128, 0, 0, 0.03);
+      color: var(--text);
+      text-align: center;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    #input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(128, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 1);
+    }
+
+    #input::placeholder {
+      color: rgba(128, 0, 0, 0.2);
+      font-size: 18px;
+    }
+
+    #hint {
+      font-size: 20px;
+      color: var(--text-dim);
+      height: 24px;
+      margin-top: -20px;
+      margin-bottom: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #hint.visible {
+      opacity: 1;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(128, 0, 0, 0.03);
+      border-radius: 16px;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+    }
+
+    .xp-container {
+      margin: 10px 0 20px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      height: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .xp-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+    }
+
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      background: rgba(255, 140, 0, 0.15);
+      border: 1px solid rgba(255, 140, 0, 0.3);
+      border-radius: 20px;
+      font-weight: 600;
+      color: #ff8c00;
+      font-size: 14px;
+      margin-top: 10px;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .streak-badge.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .level-badge {
+      font-size: 0.9rem;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    select,
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    select:hover,
+    button:hover {
+      background: #fdf5f5;
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+
+    .btn-danger {
+      background: rgba(255, 68, 68, 0.1);
+      border-color: rgba(255, 68, 68, 0.2);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 68, 68, 0.2);
+    }
+
+    #progress-container {
+      width: 100%;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    #progress-container h3 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 10px;
+    }
+
+    #progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 12px;
+    }
+
+    .tile {
+      background: white;
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(128, 0, 0, 0.05);
+    }
+
+    .tile:hover {
+      background: #fdf5f5;
+      transform: scale(1.05);
+      border-color: var(--primary);
+    }
+
+    .tile-syllable {
+      font-family: "Noto Serif KR", serif;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .tile-roman {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .tile-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--secondary);
+      transition: width 0.3s ease;
+    }
+
+    .tile-mastered {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(128, 0, 0, 0.1);
+      background: #fdf5f5;
+    }
+
+    .tile-mastered .tile-progress {
+      background: var(--primary);
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      color: white;
+      pointer-events: none;
+      animation: toast-up 1s ease-out forwards;
+      z-index: 100;
+    }
+
+    @keyframes toast-up {
+      0% {
+        transform: translate(-50%, 0);
         opacity: 1;
       }
-      #controls {
-        margin-top: 20px;
+
+      100% {
+        transform: translate(-50%, -50px);
+        opacity: 0;
       }
-      select, button {
-        font-size: 16px;
-        padding: 6px 12px;
-        margin: 10px;
-        border-radius: 5px;
-        border: none;
-        background-color: #444;
-        color: white;
+    }
+
+    .toast-correct {
+      background: #4caf50;
+    }
+
+    .toast-wrong {
+      background: #f44336;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 600px) {
+      .app-container {
+        padding: 20px;
       }
-      #progress-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 10px;
-        margin-top: 20px;
+
+      #syllable {
+        font-size: 100px;
       }
-    </style>
-  </head>
-  <body>
+
+      #input {
+        width: 100%;
+      }
+
+      .stats {
+        gap: 20px;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+  <div class="app-container" id="app">
     <h1>🧠 Hangul Trainer</h1>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-value" id="score">0</span>
+        <span class="stat-label">Score</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="daily-streak">0</span>
+        <span class="stat-label">Daily 🔥</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value"><span id="unlocked">0</span> / <span id="total">0</span></span>
+        <span class="stat-label">Unlocked</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="current-streak">0</span>
+        <span class="stat-label">Streak</span>
+      </div>
+    </div>
+
+    <div class="level-badge">Level <span id="level">1</span></div>
+    <div class="xp-container">
+      <div class="xp-bar" id="xp-bar"></div>
+    </div>
+    <div id="streak-badge" class="streak-badge">
+      🔥 <span id="streak-count">0</span> Streak!
+    </div>
 
     <div id="syllable">가</div>
 
-    <input id="input" type="text" autocomplete="off" placeholder="Type romanization..." />
-    <div id="hint"></div>
-
-    <div id="status">
-      <p>Score: <span id="score">0</span></p>
-      <p>Unlocked: <span id="unlocked">0</span> / <span id="total">0</span></p>
+    <div class="input-wrapper">
+      <input id="input" type="text" autocomplete="off" placeholder="Type romanization..." autofocus />
+      <div id="hint"></div>
     </div>
 
-    <div id="controls">
-    <label for="focus-mode">Focus on:</label>
-      <select id="focus-mode" onchange="onFocusChange()">
-        <option value="all">All</option>
-        <option value="consonant">Consonant Focus</option>
-        <option value="vowel">Vowel Focus</option>
-      </select>
-      <button onclick="resetProgress()">Reset Progress</button>
+    <div class="controls">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="focus-mode" style="font-size: 14px; color: var(--text-dim)">Focus:</label>
+        <select id="focus-mode" onchange="onFocusChange()">
+          <option value="all">All Syllables</option>
+          <option value="consonant">Consonants (ㄱ, ㅁ, ㅂ)</option>
+          <option value="vowel">Vowels (ㅏ, ㅗ, ㅜ)</option>
+        </select>
+      </div>
+      <button onclick="resetProgress()" class="btn-danger">🔄 Reset Progress</button>
     </div>
 
-    <div id="progress-container" style="margin-top: 40px">
-      <h3>📈 Progress per syllable</h3>
+    <div id="progress-container">
+      <h3>📈 Your Progress</h3>
       <div id="progress-grid"></div>
     </div>
+  </div>
 
-    <audio id="hint-sound" src="mixkit-long-pop-2358.wav" preload="auto"></audio>
-    <audio id="correct-sound" src="mixkit-correct-answer-tone-2870.wav" preload="auto"></audio>
-    <audio id="wrong-sound" src="mixkit-software-interface-back-2575.wav" preload="auto"></audio>
+  <audio id="hint-sound" src="mixkit-long-pop-2358.wav" preload="auto"></audio>
+  <audio id="correct-sound" src="mixkit-correct-answer-tone-2870.wav" preload="auto"></audio>
+  <audio id="wrong-sound" src="mixkit-software-interface-back-2575.wav" preload="auto"></audio>
 
-    <script>
-      let focusMode = "all";
+  <script>
+    let focusMode = "all";
+    const MAX_SCORE = 5;
+    const UNLOCK_THRESHOLD = 3;
 
-      const MAX_SCORE = 5;
-      const UNLOCK_THRESHOLD = 3;
+    const hangulMap = {
+      ㄱ: "g", ㄴ: "n", ㄷ: "d", ㄹ: "r", ㅁ: "m", ㅂ: "b", ㅅ: "s",
+      ㅇ: "ng", ㅈ: "j", ㅊ: "ch", ㅋ: "k", ㅌ: "t", ㅍ: "p", ㅎ: "h",
+      ㄲ: "kk", ㄸ: "tt", ㅃ: "pp", ㅆ: "ss", ㅉ: "jj",
+      ㅏ: "a", ㅑ: "ya", ㅓ: "eo", ㅕ: "yeo", ㅗ: "o", ㅛ: "yo",
+      ㅜ: "u", ㅠ: "yu", ㅡ: "eu", ㅣ: "i",
+      ㅐ: "ae", ㅒ: "yae", ㅔ: "e", ㅖ: "ye", ㅘ: "wa", ㅙ: "wae",
+      ㅚ: "oe", ㅝ: "wo", ㅞ: "we", ㅟ: "wi", ㅢ: "ui"
+    };
 
-      const hangulMap = {
-        // Basic Consonants
-        ㄱ: "g",
-        ㄴ: "n",
-        ㄷ: "d",
-        ㄹ: "r",
-        ㅁ: "m",
-        ㅂ: "b",
-        ㅅ: "s",
-        ㅇ: "ng",  // silent at beginning, ng at end
-        ㅈ: "j",
-        ㅊ: "ch",
-        ㅋ: "k",
-        ㅌ: "t",
-        ㅍ: "p",
-        ㅎ: "h",
-      
-        // Complex Consonants
-        ㄲ: "kk",
-        ㄸ: "tt",
-        ㅃ: "pp",
-        ㅆ: "ss",
-        ㅉ: "jj",
-      
-        // Basic Vowels
-        ㅏ: "a",
-        ㅑ: "ya",
-        ㅓ: "eo",
-        ㅕ: "yeo",
-        ㅗ: "o",
-        ㅛ: "yo",
-        ㅜ: "u",
-        ㅠ: "yu",
-        ㅡ: "eu",
-        ㅣ: "i",
-      
-        // Complex Vowels
-        ㅐ: "ae",
-        ㅒ: "yae",
-        ㅔ: "e",
-        ㅖ: "ye",
-        ㅘ: "wa",
-        ㅙ: "wae",
-        ㅚ: "oe",
-        ㅝ: "wo",
-        ㅞ: "we",
-        ㅟ: "wi",
-        ㅢ: "ui"
+    const allSyllables = Object.keys(hangulMap);
+    let memory = loadMemory();
+    let unlocked = getUnlocked();
+    let current = null;
+    let score = memory.session_score || 0;
+    let xp = memory.xp || 0;
+    let streak = 0;
+    let bestStreak = memory.best_streak || 0;
+    let hintTimeout;
+    let hintShown = false;
+
+    const syllableEl = document.getElementById("syllable");
+    const inputEl = document.getElementById("input");
+    const scoreEl = document.getElementById("score");
+    const unlockedEl = document.getElementById("unlocked");
+    const totalEl = document.getElementById("total");
+    const hintEl = document.getElementById("hint");
+    const levelEl = document.getElementById("level");
+    const xpBarEl = document.getElementById("xp-bar");
+    const streakEl = document.getElementById("current-streak");
+    const streakBadge = document.getElementById("streak-badge");
+    const streakCountEl = document.getElementById("streak-count");
+
+    document.getElementById("total").innerText = allSyllables.length;
+
+    function loadMemory() {
+      let saved = localStorage.getItem("hangul_memory_v2");
+      if (saved) return JSON.parse(saved);
+
+      // Attempt v1 migration
+      let oldSaved = localStorage.getItem("hangul_memory");
+      let m = {
+        jamo: {},
+        xp: 0,
+        level: 1,
+        best_streak: 0,
+        session_score: 0,
+        daily_streak: 0,
+        last_date: null
       };
-      
 
-      const allSyllables = Object.keys(hangulMap);
-
-      // Declare variables
-      let memory = loadMemory();
-      let unlocked = getUnlocked();
-      let current = null;
-      let score = 0;
-      let hintTimeout;
-      let hintShown = false;
-
-      const syllableEl = document.getElementById("syllable");
-      const inputEl = document.getElementById("input");
-      const scoreEl = document.getElementById("score");
-      const unlockedEl = document.getElementById("unlocked");
-      const totalEl = document.getElementById("total");
-      const hintEl = document.getElementById("hint");
-
-      totalEl.innerText = allSyllables.length;
-
-      function loadMemory() {
-        let saved = localStorage.getItem("hangul_memory");
-        if (saved) return JSON.parse(saved);
-        let m = {};
-        allSyllables.forEach((k) => (m[k] = 0));
-        return m;
+      if (oldSaved) {
+        m.jamo = JSON.parse(oldSaved);
+      } else {
+        allSyllables.forEach((k) => (m.jamo[k] = 0));
       }
+      return m;
+    }
 
-      function saveMemory() {
-        localStorage.setItem("hangul_memory", JSON.stringify(memory));
-      }
+    function saveMemory() {
+      memory.session_score = score;
+      memory.xp = xp;
+      memory.best_streak = Math.max(memory.best_streak || 0, bestStreak);
+      localStorage.setItem("hangul_memory_v2", JSON.stringify(memory));
+    }
 
-      function getUnlocked() {
-        const initial = 3;
-        const unlockedList = allSyllables.filter(
-          (k) => memory[k] >= UNLOCK_THRESHOLD
-        );
-        const baseUnlocked = Math.max(initial, unlockedList.length + initial);
-        return allSyllables.slice(0, baseUnlocked);
-      }
+    function checkDailyStreak() {
+      const today = new Date().toDateString();
+      if (!memory.last_date) {
+        memory.daily_streak = 0;
+      } else {
+        const lastDate = new Date(memory.last_date);
+        const diff = Math.floor((new Date(today) - lastDate) / (1000 * 60 * 60 * 24));
 
-      function getNextSyllable() {
-        let candidates = unlocked.filter((s) => {
-          const known = memory[s] || 0;
-          if (known >= MAX_SCORE) return false;
-      
-          if (focusMode === "vowel") {
-            const { vowel } = decomposeHangul(s);
-            return vowel === "ㅏ" || vowel === "ㅗ" || vowel === "ㅜ"; // customize this
-          } else if (focusMode === "consonant") {
-            const { initial } = decomposeHangul(s);
-            return initial === "ㄱ" || initial === "ㅁ" || initial === "ㅂ"; // customize this
-          }
-      
-          return true;
-        });
-      
-        if (candidates.length === 0) candidates = unlocked;
-        return candidates[Math.floor(Math.random() * candidates.length)];
-      }
-      
-
-      function onFocusChange() {
-        focusMode = document.getElementById("focus-mode").value;
-        current = getNextSyllable();
-        updateUI();
-      }
-
-      function decomposeHangul(syllable) {
-        const code = syllable.charCodeAt(0) - 0xAC00;
-        const initial = Math.floor(code / 588); // Choseong
-        const medial = Math.floor((code % 588) / 28); // Jungseong
-        const finals = code % 28; // Jongseong
-      
-        const initials = [
-          "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ",
-          "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ",
-          "ㅌ", "ㅍ", "ㅎ",
-        ];
-        const vowels = [
-          "ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ",
-          "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ",
-          "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ",
-        ];
-      
-        return {
-          initial: initials[initial],
-          vowel: vowels[medial],
-          final: finals,
-        };
-      }
-      
-      function isVowel(syllable) {
-        const { vowel } = decomposeHangul(syllable);
-        return !!vowel;
-      }
-      
-      function isConsonant(syllable) {
-        const { initial } = decomposeHangul(syllable);
-        return !!initial;
-      }
-      
-
-      function showHint() {
-        hintEl.innerText = `Hint: ${hangulMap[current]}`;
-        hintEl.classList.add("visible");
-
-        if (!hintShown) {
-          memory[current] = Math.max(0, memory[current] - 1);
-          saveMemory();
-          hintShown = true;
-
-          document.getElementById("hint-sound").play();
+        if (diff === 1) {
+          // Continued streak
+        } else if (diff > 1) {
+          memory.daily_streak = 0;
         }
       }
+    }
 
-      function updateUI() {
-        syllableEl.innerText = current;
-        scoreEl.innerText = score;
-        unlockedEl.innerText = unlocked.length;
-        hintEl.innerText = "";
-        hintEl.classList.remove("visible");
-        clearTimeout(hintTimeout);
-        hintShown = false;
-        hintTimeout = setTimeout(showHint, 4000);
-        renderProgress(); // <- here
-      }
+    function getUnlocked() {
+      const initial = 3;
+      const unlockedList = allSyllables.filter((k) => (memory.jamo[k] || 0) >= UNLOCK_THRESHOLD);
+      const baseUnlocked = Math.max(initial, unlockedList.length + initial);
+      return allSyllables.slice(0, baseUnlocked);
+    }
 
-      function renderProgress() {
-        const gridEl = document.getElementById("progress-grid");
-        gridEl.innerHTML = ""; // clear previous
+    function decomposeHangul(syllable) {
+      const code = syllable.charCodeAt(0) - 0xAC00;
+      if (code < 0 || code > 11171) return { initial: syllable, vowel: null };
+      const initial = Math.floor(code / 588);
+      const medial = Math.floor((code % 588) / 28);
+      const initials = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+      const vowels = ["ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ"];
+      return { initial: initials[initial], vowel: vowels[medial] };
+    }
 
-        allSyllables.forEach((syl) => {
-          const score = memory[syl] || 0;
-          const percent = Math.min((score / MAX_SCORE) * 100, 100);
-
-          const tile = document.createElement("div");
-          tile.style.border = "1px solid #444";
-          tile.style.borderRadius = "8px";
-          tile.style.overflow = "hidden";
-          tile.style.background = "#222";
-          tile.style.textAlign = "center";
-          tile.style.fontSize = "14px";
-
-          tile.innerHTML = `
-            <div style="height: 6px; background: #333;">
-              <div style="width:${percent}%; height: 100%; background: ${
-            percent >= 100 ? "#4caf50" : "#2196f3"
-          };"></div>
-            </div>
-            <div style="padding: 10px;">
-              <div style="font-size: 20px;">${syl}</div>
-              <div style="opacity: 0.7;">${hangulMap[syl]}</div>
-            </div>
-          `;
-
-          gridEl.appendChild(tile);
-        });
-      }
-
-      function resetProgress() {
-        if (confirm("Are you sure you want to reset all progress?")) {
-          localStorage.removeItem("hangul_memory");
-          memory = loadMemory();
-          unlocked = getUnlocked();
-          score = 0;
-          current = getNextSyllable();
-          updateUI();
-          renderProgress();
+    function getNextSyllable() {
+      let candidates = unlocked.filter((s) => {
+        if ((memory.jamo[s] || 0) >= MAX_SCORE) return false;
+        if (focusMode === "vowel") {
+          const { vowel } = decomposeHangul(s);
+          return ["ㅏ", "ㅗ", "ㅜ"].includes(vowel);
+        } else if (focusMode === "consonant") {
+          const { initial } = decomposeHangul(s);
+          return ["ㄱ", "ㅁ", "ㅂ"].includes(initial);
         }
-      }
-
-      inputEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const roman = inputEl.value.trim().toLowerCase();
-          if (roman === hangulMap[current]) {
-            score++;
-            memory[current] = Math.min(MAX_SCORE, memory[current] + 1);
-            document.getElementById("correct-sound").currentTime = 0;
-            document.getElementById("correct-sound").play();
-          } else {
-            memory[current] = Math.max(0, memory[current] - 1);
-            document.getElementById("wrong-sound").currentTime = 0;
-            document.getElementById("wrong-sound").play();
-          }
-          saveMemory();
-          unlocked = getUnlocked();
-          current = getNextSyllable();
-          inputEl.value = "";
-          updateUI();
-          renderProgress(); // <- here
-        }
+        return true;
       });
+      if (candidates.length === 0) candidates = unlocked;
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
 
-      // ✅ Initialize the first syllable after all functions are ready
+    function onFocusChange() {
+      focusMode = document.getElementById("focus-mode").value;
       current = getNextSyllable();
       updateUI();
-    </script>
+    }
 
-    <button
-      onclick="resetProgress()"
-      style="
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 6px;
-        background-color: #ff4444;
-        color: white;
-        border: none;
-        cursor: pointer;
-      "
-    >
-      🔄 Reset Progress
-    </button>
-  </body>
+    function showHint() {
+      hintEl.innerText = `Hint: ${hangulMap[current]}`;
+      hintEl.classList.add("visible");
+      if (!hintShown) {
+        memory.jamo[current] = Math.max(0, (memory.jamo[current] || 0) - 1);
+        saveMemory();
+        hintShown = true;
+        playSound("hint-sound");
+        streak = 0; // Hint resets streak
+        updateStreakUI();
+      }
+    }
+
+    function playSound(id) {
+      const sound = document.getElementById(id);
+      sound.currentTime = 0;
+      sound.play().catch(() => { });
+    }
+
+    function notify(type, text) {
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      toast.innerText = text;
+      document.querySelector(".input-wrapper").appendChild(toast);
+      setTimeout(() => toast.remove(), 1000);
+    }
+
+    function celebrateMastery() {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#800000', '#ffffff', '#a52a2a']
+      });
+    }
+
+    function updateUI() {
+      syllableEl.innerText = current;
+      scoreEl.innerText = score;
+      unlockedEl.innerText = unlocked.length;
+      hintEl.innerText = "";
+      hintEl.classList.remove("visible");
+      clearTimeout(hintTimeout);
+      hintShown = false;
+      hintTimeout = setTimeout(showHint, 4000);
+      renderProgress();
+      updateGamificationUI();
+
+      syllableEl.classList.remove("syllable-pulse");
+      void syllableEl.offsetWidth;
+      syllableEl.classList.add("syllable-pulse");
+    }
+
+    function updateGamificationUI() {
+      const level = Math.floor(Math.sqrt(xp / 100)) + 1;
+      const currentLevelXP = Math.pow(level - 1, 2) * 100;
+      const nextLevelXP = Math.pow(level, 2) * 100;
+      const progress = ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+
+      levelEl.innerText = level;
+      xpBarEl.style.width = `${progress}%`;
+      streakEl.innerText = streak;
+      document.getElementById("daily-streak").innerText = memory.daily_streak || 0;
+
+      if (level > (memory.level || 1)) {
+        celebrateLevelUp(level);
+        memory.level = level;
+        saveMemory();
+      }
+    }
+
+    function updateStreakUI() {
+      streakEl.innerText = streak;
+      if (streak >= 3) {
+        streakBadge.classList.add("visible");
+        streakCountEl.innerText = streak;
+      } else {
+        streakBadge.classList.remove("visible");
+      }
+    }
+
+    function celebrateLevelUp(lvl) {
+      playSound("correct-sound");
+      confetti({
+        particleCount: 200,
+        spread: 90,
+        origin: { y: 0.6 },
+        colors: ['#800000', '#ffffff', '#a52a2a']
+      });
+      notify("correct", `LEVEL UP! Level ${lvl}`);
+    }
+
+    function renderProgress() {
+      const gridEl = document.getElementById("progress-grid");
+      gridEl.innerHTML = "";
+      allSyllables.forEach((syl) => {
+        const sylScore = memory.jamo[syl] || 0;
+        const percent = Math.min((sylScore / MAX_SCORE) * 100, 100);
+        const isMastered = sylScore >= MAX_SCORE;
+        const tile = document.createElement("div");
+        tile.className = `tile ${isMastered ? 'tile-mastered' : ''}`;
+        tile.innerHTML = `
+          <div class="tile-syllable">${syl}</div>
+          <div class="tile-roman">${hangulMap[syl]}</div>
+          <div class="tile-progress" style="width: ${percent}%"></div>
+        `;
+        gridEl.appendChild(tile);
+      });
+    }
+
+    function resetProgress() {
+      if (confirm("Are you sure you want to reset all progress?")) {
+        localStorage.removeItem("hangul_memory_v2");
+        localStorage.removeItem("hangul_memory");
+        memory = loadMemory();
+        unlocked = getUnlocked();
+        score = 0;
+        xp = 0;
+        streak = 0;
+        bestStreak = 0;
+        current = getNextSyllable();
+        updateUI();
+        updateStreakUI();
+      }
+    }
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const roman = inputEl.value.trim().toLowerCase();
+        if (roman === hangulMap[current]) {
+          const prevScore = memory.jamo[current] || 0;
+          score++;
+          streak++;
+          bestStreak = Math.max(bestStreak, streak);
+          xp += 10 + (Math.floor(streak / 5) * 5); // Bonus XP for streaks
+
+          memory.jamo[current] = Math.min(MAX_SCORE, (memory.jamo[current] || 0) + 1);
+          notify("correct", "Correct!");
+          playSound("correct-sound");
+          if (prevScore < MAX_SCORE && memory.jamo[current] === MAX_SCORE) {
+            celebrateMastery();
+          }
+
+          // Daily streak update
+          const today = new Date().toDateString();
+          if (memory.last_date !== today) {
+            if (memory.last_date) {
+              const lastDate = new Date(memory.last_date);
+              const diff = Math.floor((new Date(today) - lastDate) / (1000 * 60 * 60 * 24));
+              if (diff === 1) memory.daily_streak++;
+              else memory.daily_streak = 1;
+            } else {
+              memory.daily_streak = 1;
+            }
+            memory.last_date = today;
+          }
+
+          updateStreakUI();
+        } else {
+          memory.jamo[current] = Math.max(0, (memory.jamo[current] || 0) - 1);
+          notify("wrong", "Try again");
+          playSound("wrong-sound");
+          streak = 0;
+          updateStreakUI();
+          document.getElementById("app").classList.remove("shake");
+          void document.getElementById("app").offsetWidth;
+          document.getElementById("app").classList.add("shake");
+        }
+        saveMemory();
+        unlocked = getUnlocked();
+        current = getNextSyllable();
+        inputEl.value = "";
+        updateUI();
+      }
+    });
+
+    current = getNextSyllable();
+    checkDailyStreak();
+    updateUI();
+  </script>
+</body>
+
 </html>
