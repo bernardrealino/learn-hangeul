@@ -161,24 +161,8 @@ function generateNextCandidate() {
     return finalSource[Math.floor(Math.random() * finalSource.length)];
 }
 
-function updatePreviewQueue(isCorrect = false) {
-    if (!carouselTrack) return;
-
-    if (isCorrect) {
-        // Slide animation: Shift the track to the left
-        // Flex basis + gap = shift amount. 
-        carouselTrack.style.transition = "transform 0.5s cubic-bezier(0.45, 0.05, 0.55, 0.95)";
-        carouselTrack.style.transform = "translateX(-150px)";
-
-        setTimeout(() => {
-            // Reset track instantly and update content
-            carouselTrack.style.transition = "none";
-            carouselTrack.style.transform = "translateX(0)";
-            refreshTiles();
-        }, 500);
-    } else {
-        refreshTiles();
-    }
+function updatePreviewQueue() {
+    refreshTiles();
 }
 
 function refreshTiles() {
@@ -421,7 +405,7 @@ if (inputEl) {
             current = getNextUpcoming();
             inputEl.value = "";
             updateUI();
-            updatePreviewQueue(true);
+            updatePreviewQueue();
         }
     });
 }
